@@ -1,134 +1,186 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="stylesheet.css">
-    <title>TreeMapProjectFreeCodeCamp</title>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="stylesheet.css">
+  <title>TreeMapProjectFreeCodeCamp</title>
 </head>
 
 <body>
-    <script src="https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js"></script>
-    <script src="https://d3js.org/d3.v4.js"></script>
+  <script src="https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js"></script>
+  <script src="https://d3js.org/d3.v4.js"></script>
 
 
-    <div id="title">Video Game Sales Tree Map Project</div>
-    <div id="description">Top 100 Most Sold Video Games Grouped by Platform</div>
-    <!-- Create a div where the graph will take place -->
-    <div id="tree_map"></div>
+  <div id="title">Video Game Sales Tree Map Project</div>
+  <div id="description">Top 100 Most Sold Video Games Grouped by Platform</div>
+  <!-- Create a div where the graph will take place -->
+  <div id="tree_map"></div>
+  <div id="legend"></div>
 
-    <script>
-//function taken from Stack Overflow - method to wrap text https://stackoverflow.com/questions/24784302/wrapping-text-in-d3
-function wrap(text, width) {
-    text.each(function () {
+  <script>
+    //function taken from Stack Overflow - method to wrap text https://stackoverflow.com/questions/24784302/wrapping-text-in-d3
+    function wrap(text, width) {
+      text.each(function () {
         var text = d3.select(this),
-            words = text.text().split(/\s+/).reverse(),
-            word,
-            line = [],
-            lineNumber = 0,
-            lineHeight = 1.1, // ems
-            x = text.attr("x"),
-            y = text.attr("y"),
-            dy = 0, //parseFloat(text.attr("dy")),
-            tspan = text.text(null)
-                        .append("tspan")
-                        .attr("x", x)
-                        .attr("y", y)
-                        .attr("dy", dy + "em");
+          words = text.text().split(/\s+/).reverse(),
+          word,
+          line = [],
+          lineNumber = 0,
+          lineHeight = 1.1, // ems
+          x = text.attr("x"),
+          y = text.attr("y"),
+          dy = 0, //parseFloat(text.attr("dy")),
+          tspan = text.text(null)
+            .append("tspan")
+            .attr("x", x)
+            .attr("y", y)
+            .attr("dy", dy + "em");
         while (word = words.pop()) {
-            line.push(word);
+          line.push(word);
+          tspan.text(line.join(" "));
+          if (tspan.node().getComputedTextLength() > width) {
+            line.pop();
             tspan.text(line.join(" "));
-            if (tspan.node().getComputedTextLength() > width) {
-                line.pop();
-                tspan.text(line.join(" "));
-                line = [word];
-                tspan = text.append("tspan")
-                            .attr("x", x)
-                            .attr("y", y)
-                            .attr("dy", ++lineNumber * lineHeight + dy + "em")
-                            .text(word);
-            }
+            line = [word];
+            tspan = text.append("tspan")
+              .attr("x", x)
+              .attr("y", y)
+              .attr("dy", ++lineNumber * lineHeight + dy + "em")
+              .text(word);
+          }
         }
-    });
-}
+      });
+    }
 
 
-var margin = {top: 10, right: 10, bottom: 10, left: 10},
-  width = 1400 - margin.left - margin.right,
-  height = 800 - margin.top - margin.bottom;
+    var margin = { top: 10, right: 10, bottom: 10, left: 10 },
+      width = 1400 - margin.left - margin.right,
+      height = 800 - margin.top - margin.bottom;
 
- // prepare a color scale
- var color = d3.scaleOrdinal()
-    .domain(["2600", "Wii", "NES","GB","SD","X360","PS3","PS2","SNES","GBA","PS4","3DS","N64","PS","XB","PC","PSP","XOne"])
-    .range([ "#0000FF", "#FF0000", "#00FF00","#00FFFF", "#FFFF00", "#FF00FF","#505000", "#005050", "#500050","#500000", "#005000", "#000050","#900000", "#909000", "#000090","#009000", "#009090", "#909090"])
+    //catergories and colours
+    let categoriesArray = ["2600", "Wii", "NES", "GB", "SD", "X360", "PS3", "PS2", "SNES", "GBA", "PS4", "3DS", "N64", "PS", "XB", "PC", "PSP", "XOne"];
+    let colourArray = ["#0000FF", "#FF0000", "#00FF00", "#00FFFF", "#FFFF00", "#FF00FF", "#505000", "#005050", "#500050", "#500000", "#005000", "#000050", "#900000", "#909000", "#000090", "#009000", "#009090", "#909090"];
 
-// append the svg object to the body of the page
-var svg = d3.select("#tree_map")
-.append("svg")
-  .attr("width", width + margin.left + margin.right)
-  .attr("height", height + margin.top + margin.bottom)
-.append("g")
-  .attr("transform",
+    //functions to position legend ellements
+    let col=(index)=>Math.floor(index/3);
+
+    let legendX=(index)=>{
+      return (col(index)*100)+(width/4)-margin.left
+    }
+
+    let legendY=(index)=>{
+      let row=index-(col(index)*3);
+      console.log(row);
+      return row*50
+    }
+
+    // prepare a color scale
+    var color = d3.scaleOrdinal()
+      .domain(categoriesArray)
+      .range(colourArray)
+
+    // append the svg object to the body of the page
+    var svg = d3.select("#tree_map")
+      .append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr("transform",
         "translate(" + margin.left + "," + margin.top + ")");
 
 
-        fetch("https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-game-sales-data.json")
-            .then(response => response.json())
-            .then(data => {
-                console.log(data);//allows me to inspect the json data file.
+    let legendSvg = d3.select("#legend")
+      .append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr("transform",
+        "translate(" + margin.left + "," + margin.top + ")");
+
+
+    fetch("https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-game-sales-data.json")
+      .then(response => response.json())
+      .then(data => {
+        console.log(data);//allows me to inspect the json data file.
 
 
 
-                  // Give the data to this cluster layout:
-  var root = d3.hierarchy(data).sum(function(d){ return d.value}).sort(function (a, b) {
-        return  b.value - a.value;
-      }); // Here the size of each leave is given in the 'value' field in input data
+        // Give the data to this cluster layout:
+        var root = d3.hierarchy(data).sum(function (d) { return d.value }).sort(function (a, b) {
+          return b.value - a.value;
+        }); // Here the size of each leave is given in the 'value' field in input data
 
-// Then d3.treemap computes the position of each element of the hierarchy
-d3.treemap()
-  .size([width, height])
-  .padding(0)
-    (root);
+        // Then d3.treemap computes the position of each element of the hierarchy
+        d3.treemap()
+          .size([width, height])
+          .padding(0)
+          (root);
 
- console.log(root.leaves());
+        console.log(root.leaves());
 
-// use this information to add rectangles:
-svg
-  .selectAll("rect")
-  .data(root.leaves())
-  .enter()
-  .append("rect")
-      .attr("class","tile")
-      .attr("data-name",(d)=>d.data.name)
-      .attr("data-category",(d)=>d.data.category)
-      .attr("data-value",(d)=>d.data.value)
-    .attr('x', function (d) { return d.x0; })
-    .attr('y', function (d) { return d.y0; })
-    .attr('width', function (d) { return d.x1 - d.x0; })
-    .attr('height', function (d) { return d.y1 - d.y0; })
-    .style("stroke", "black")
-    .style("fill", function(d){ return color(d.data.category)} )
+        // use this information to add rectangles:
+        svg
+          .selectAll("rect")
+          .data(root.leaves())
+          .enter()
+          .append("rect")
+          .attr("class", "tile")
+          .attr("data-name", (d) => d.data.name)
+          .attr("data-category", (d) => d.data.category)
+          .attr("data-value", (d) => d.data.value)
+          .attr('x', function (d) { return d.x0; })
+          .attr('y', function (d) { return d.y0; })
+          .attr('width', function (d) { return d.x1 - d.x0; })
+          .attr('height', function (d) { return d.y1 - d.y0; })
+          .style("stroke", "black")
+          .style("fill", function (d) { return color(d.data.category) })
 
-// and to add the text labels
-svg
-  .selectAll("text")
-  .data(root.leaves())
-  .enter()
-  .append("text")
-    .attr("x", function(d){ return d.x0+5})    // +10 to adjust position (more right)
-    .attr("y", function(d){ return d.y0+10})    // +20 to adjust position (lower)
-    .text(function(d){ return d.data.name})
-    .attr("font-size", "10px")
-    .attr("wrap","50px")
-    .attr("fill", "white")
-    .call(wrap, 40); // wrap the text in <= 30 pixels
+        // and to add the text labels
+        svg
+          .selectAll("text")
+          .data(root.leaves())
+          .enter()
+          .append("text")
+          .attr("x", function (d) { return d.x0 + 5 })    // +10 to adjust position (more right)
+          .attr("y", function (d) { return d.y0 + 10 })    // +20 to adjust position (lower)
+          .text(function (d) { return d.data.name })
+          .attr("font-size", "10px")
+          .attr("wrap", "50px")
+          .attr("fill", "white")
+          .call(wrap, 40); // wrap the text in <= 30 pixels
+
+        legendSvg.selectAll("rect")
+          .data(categoriesArray)
+          .enter()
+          .append("rect")
+          .attr("class","legend-item")
+          .attr("x", (d,i) => legendX(i))
+          .attr("y", (d,i) => legendY(i))
+          .attr("width", 10)
+          .attr("height", 10)
+          .style("stroke", "black")
+          .attr("fill", (d,i)=>colourArray[i]);
+
+          legendSvg.selectAll("text")
+          .data(categoriesArray)
+          .enter()
+          .append("text")
+          .attr("x", (d,i) => legendX(i)+15)
+          .attr("y", (d,i) => legendY(i)+10)
+          .text((d)=>d);
 
 
 
-            });
 
-    </script>
+      });
+
+
+
+
+
+  </script>
 
 
 
