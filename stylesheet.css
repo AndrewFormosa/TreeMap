@@ -17,3 +17,9 @@ font-size: 3rem;
     margin-bottom: 10px;
     font-size: 1.5rem;
 }
+
+#tooltip{
+    height:100px;
+    width:150px;
+    background: black;
+}

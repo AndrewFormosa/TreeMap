@@ -20,6 +20,9 @@
   <div id="legend"></div>
 
   <script>
+    
+
+
     //function taken from Stack Overflow - method to wrap text https://stackoverflow.com/questions/24784302/wrapping-text-in-d3
     function wrap(text, width) {
       text.each(function () {
@@ -76,6 +79,14 @@
       return row*50
     }
 
+     //set up tooltip (got help online with the tooltip as dif from the <title> example in the course.)
+      const tooltip = d3
+      .select("body")
+      .append("div")
+      .attr("class", "tooltip")
+      .attr("id", "tooltip")
+
+
     // prepare a color scale
     var color = d3.scaleOrdinal()
       .domain(categoriesArray)
@@ -104,6 +115,7 @@
       .then(response => response.json())
       .then(data => {
         console.log(data);//allows me to inspect the json data file.
+
 
 
 
@@ -136,6 +148,29 @@
           .attr('height', function (d) { return d.y1 - d.y0; })
           .style("stroke", "black")
           .style("fill", function (d) { return color(d.data.category) })
+          .on("mouseover", function (d) {
+                             
+                                console.log(d);
+                                tooltip
+                                    .transition()
+                                    .duration(200)
+                                    .style("opacity", 0.9);
+                                tooltip
+                                    .attr("data-value",d.data.value)
+                                    .html("Name:"+d.data.name+"</br>Category:"+d.data.category+"</br>Value:"+d.data.value)
+                                    .style("position", "absolute")
+                                    .style("left",event.clientX+30)
+                                    .style("top", event.clientY+30);
+                                tooltip
+                                    .attr("data-education", "jhg");
+                            })
+                            .on("mouseout", function (d) {
+                                tooltip
+                                    .transition()
+                                    .style("opacity", 0);
+                            });
+
+
 
         // and to add the text labels
         svg
