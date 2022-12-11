@@ -28,6 +28,7 @@ color:rgb(187, 187, 187);
     width:150px;
     background: rgb(198, 198, 198);
     border-radius: 10px;
+    border:solid 1px black;
 }
 
 #footer{
